@@ -1,0 +1,235 @@
+import React, { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
+import { useDispatch } from 'react-redux'
+import { setCredentials } from '../../store/slices/authSlice'
+import api from '../../services/api'
+import toast from 'react-hot-toast'
+
+export default function AdminRegisterPage() {
+  const navigate = useNavigate()
+  const dispatch = useDispatch()
+  const [loading, setLoading] = useState(false)
+  const [showSecret, setShowSecret] = useState(false)
+  const [showPass, setShowPass] = useState(false)
+  const [form, setForm] = useState({
+    name: '',
+    email: '',
+    password: '',
+    phone: '',
+    adminSecret: ''
+  })
+
+  const set = (key) => (e) => setForm(f => ({ ...f, [key]: e.target.value }))
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+
+    if (!form.name.trim())        return toast.error('Name is required')
+    if (!form.email.trim())       return toast.error('Email is required')
+    if (form.password.length < 6) return toast.error('Password must be at least 6 characters')
+    if (!form.adminSecret.trim()) return toast.error('Admin secret key is required')
+
+    setLoading(true)
+    try {
+      const res = await api.post('/auth/register-admin', form)
+      const { token, user } = res.data
+
+      // Save to localStorage + Redux (same as normal login)
+      localStorage.setItem('novacinema_token', token)
+      localStorage.setItem('novacinema_user', JSON.stringify(user))
+      dispatch(setCredentials({ token, user }))
+
+      toast.success(`Admin account created! Welcome, ${user.name} ⚡`)
+      navigate('/admin')
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Failed to create admin account'
+      toast.error(msg)
+      // Hint if wrong secret
+      if (msg.toLowerCase().includes('secret')) {
+        toast('Default secret key is: novacinema_admin_2024', { icon: '💡', duration: 5000 })
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center pt-16 px-4" style={{ background: '#040308' }}>
+      {/* background glow */}
+      <div className="absolute inset-0 pointer-events-none" style={{
+        background: 'radial-gradient(ellipse at 50% 0%, rgba(34,211,238,0.08) 0%, transparent 60%)'
+      }} />
+
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative z-10 w-full max-w-md"
+      >
+        {/* Header badge */}
+        <div className="text-center mb-6">
+          <Link to="/" className="font-display font-black text-2xl text-white">
+            NOVA<span className="text-gradient">CINEMA</span>
+          </Link>
+          <div className="inline-flex items-center gap-2 mt-3 px-4 py-1.5 rounded-full border border-cyan-500/30 bg-cyan-500/10">
+            <span className="text-cyan-400 text-sm">⚡</span>
+            <span className="text-cyan-400 text-xs font-mono font-bold tracking-wider">ADMIN REGISTRATION</span>
+          </div>
+        </div>
+
+        {/* Card */}
+        <div className="rounded-2xl p-8 border border-white/10"
+          style={{ background: 'rgba(18,13,31,0.95)', backdropFilter: 'blur(20px)' }}>
+
+          <h2 className="font-display text-xl font-bold text-white mb-1">Create Admin Account</h2>
+          <p className="text-nova-500 text-sm mb-6">
+            Requires the admin secret key set in your <code className="text-cyan-400 text-xs">.env</code> file
+          </p>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+
+            {/* Name */}
+            <div>
+              <label className="text-xs text-nova-400 font-medium mb-1.5 block">Full Name</label>
+              <input
+                type="text" value={form.name} onChange={set('name')}
+                placeholder="e.g. Nova Admin"
+                required
+                className="w-full rounded-xl px-4 py-3 text-white text-sm placeholder-nova-700
+                           focus:outline-none transition-all"
+                style={{ background: 'rgba(29,21,48,0.8)', border: '1px solid rgba(61,45,104,0.5)' }}
+                onFocus={e => e.target.style.borderColor = '#22d3ee'}
+                onBlur={e => e.target.style.borderColor = 'rgba(61,45,104,0.5)'}
+              />
+            </div>
+
+            {/* Email */}
+            <div>
+              <label className="text-xs text-nova-400 font-medium mb-1.5 block">Email Address</label>
+              <input
+                type="email" value={form.email} onChange={set('email')}
+                placeholder="admin@yourcinema.com"
+                required
+                className="w-full rounded-xl px-4 py-3 text-white text-sm placeholder-nova-700
+                           focus:outline-none transition-all"
+                style={{ background: 'rgba(29,21,48,0.8)', border: '1px solid rgba(61,45,104,0.5)' }}
+                onFocus={e => e.target.style.borderColor = '#22d3ee'}
+                onBlur={e => e.target.style.borderColor = 'rgba(61,45,104,0.5)'}
+              />
+            </div>
+
+            {/* Password */}
+            <div>
+              <label className="text-xs text-nova-400 font-medium mb-1.5 block">Password</label>
+              <div className="relative">
+                <input
+                  type={showPass ? 'text' : 'password'}
+                  value={form.password} onChange={set('password')}
+                  placeholder="Min 6 characters"
+                  required
+                  className="w-full rounded-xl px-4 py-3 pr-12 text-white text-sm placeholder-nova-700
+                             focus:outline-none transition-all"
+                  style={{ background: 'rgba(29,21,48,0.8)', border: '1px solid rgba(61,45,104,0.5)' }}
+                  onFocus={e => e.target.style.borderColor = '#22d3ee'}
+                  onBlur={e => e.target.style.borderColor = 'rgba(61,45,104,0.5)'}
+                />
+                <button type="button" onClick={() => setShowPass(v => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-nova-500 hover:text-nova-300 text-xs">
+                  {showPass ? '🙈' : '👁️'}
+                </button>
+              </div>
+            </div>
+
+            {/* Phone (optional) */}
+            <div>
+              <label className="text-xs text-nova-400 font-medium mb-1.5 block">
+                Phone <span className="text-nova-700">(optional)</span>
+              </label>
+              <input
+                type="tel" value={form.phone} onChange={set('phone')}
+                placeholder="+91-9999999999"
+                className="w-full rounded-xl px-4 py-3 text-white text-sm placeholder-nova-700
+                           focus:outline-none transition-all"
+                style={{ background: 'rgba(29,21,48,0.8)', border: '1px solid rgba(61,45,104,0.5)' }}
+                onFocus={e => e.target.style.borderColor = '#22d3ee'}
+                onBlur={e => e.target.style.borderColor = 'rgba(61,45,104,0.5)'}
+              />
+            </div>
+
+            {/* Admin Secret */}
+            <div>
+              <label className="text-xs text-nova-400 font-medium mb-1.5 flex items-center justify-between">
+                <span>🔑 Admin Secret Key</span>
+                <span className="text-nova-700 font-normal">Set in backend/.env</span>
+              </label>
+              <div className="relative">
+                <input
+                  type={showSecret ? 'text' : 'password'}
+                  value={form.adminSecret} onChange={set('adminSecret')}
+                  placeholder="Enter ADMIN_SECRET from .env"
+                  required
+                  className="w-full rounded-xl px-4 py-3 pr-12 text-white text-sm placeholder-nova-700
+                             focus:outline-none transition-all font-mono"
+                  style={{
+                    background: 'rgba(10,20,14,0.8)',
+                    border: '1px solid rgba(34,211,238,0.2)'
+                  }}
+                  onFocus={e => e.target.style.borderColor = '#22d3ee'}
+                  onBlur={e => e.target.style.borderColor = 'rgba(34,211,238,0.2)'}
+                />
+                <button type="button" onClick={() => setShowSecret(v => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-nova-500 hover:text-nova-300 text-xs">
+                  {showSecret ? '🙈' : '👁️'}
+                </button>
+              </div>
+              {/* Hint box */}
+              <div className="mt-2 p-3 rounded-xl text-xs"
+                style={{ background: 'rgba(10,30,20,0.6)', border: '1px solid rgba(34,211,238,0.1)' }}>
+                <p className="text-nova-500 mb-1">Default key (add to your <code className="text-cyan-600">backend/.env</code>):</p>
+                <div className="flex items-center justify-between">
+                  <code className="text-cyan-400 font-mono">ADMIN_SECRET=novacinema_admin_2024</code>
+                  <button type="button"
+                    onClick={() => { setForm(f => ({...f, adminSecret: 'novacinema_admin_2024'})); toast.success('Secret filled!') }}
+                    className="text-xs px-2 py-0.5 rounded-lg ml-2 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/10 transition-all flex-shrink-0">
+                    Fill
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Submit */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3.5 mt-2 rounded-xl font-display font-bold text-sm tracking-wider uppercase
+                         transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              style={{ background: 'linear-gradient(135deg, #3d2d68, #22d3ee)', color: '#fff' }}
+            >
+              {loading ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Creating Account…
+                </>
+              ) : '⚡ Create Admin Account'}
+            </button>
+          </form>
+
+          <div className="mt-6 pt-5 border-t border-nova-800 space-y-2 text-center">
+            <p className="text-sm text-nova-500">
+              Already have an account?{' '}
+              <Link to="/login" className="text-cyan-400 hover:text-cyan-300 font-medium transition-colors">
+                Sign In
+              </Link>
+            </p>
+            <p className="text-sm text-nova-500">
+              Regular user?{' '}
+              <Link to="/register" className="text-nova-400 hover:text-nova-300 transition-colors">
+                Sign up here
+              </Link>
+            </p>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  )
+}
