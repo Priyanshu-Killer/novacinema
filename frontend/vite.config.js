@@ -1,25 +1,21 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-export default defineConfig(({ mode }) => ({
+export default defineConfig({
   plugins: [react()],
   server: {
     host: '0.0.0.0',
     port: 5173,
-    proxy: mode === 'development' ? {
+    // Proxy only for local development
+    proxy: {
       '/api': {
-        target: 'https://novacinema-l2u7.onrender.com',
+        target: 'http://localhost:5000',
         changeOrigin: true,
       },
       '/socket.io': {
-        target: 'https://novacinema-l2u7.onrender.com',
+        target: 'http://localhost:5000',
         ws: true,
-        changeOrigin: true,
       }
-    } : {}
-  },
-  build: {
-    outDir: 'dist',
-    sourcemap: false,
+    }
   }
-}))
+})
