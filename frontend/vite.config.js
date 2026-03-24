@@ -8,11 +8,11 @@ export default defineConfig(({ mode }) => ({
     port: 5173,
     proxy: mode === 'development' ? {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'https://novacinema-l2u7.onrender.com',
         changeOrigin: true,
       },
       '/socket.io': {
-        target: 'http://localhost:5000',
+        target: 'https://novacinema-l2u7.onrender.com',
         ws: true,
         changeOrigin: true,
       }
