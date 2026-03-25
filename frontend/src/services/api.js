@@ -1,6 +1,5 @@
 import axios from 'axios'
 
-// Use environment variable in production, fallback to localhost in development
 const baseURL = import.meta.env.VITE_API_URL || '/api'
 
 const api = axios.create({
@@ -8,18 +7,22 @@ const api = axios.create({
   timeout: 15000,
 })
 
-// Attach token to every request
+// Attach token — key is novacinema_token
 api.interceptors.request.use(config => {
   const token = localStorage.getItem('novacinema_token')
   if (token) config.headers.Authorization = `Bearer ${token}`
   return config
 })
 
-// Handle 401 — redirect to login
+// Handle 401
 api.interceptors.response.use(
   res => res,
   err => {
-    // Don't auto-redirect on 401 — let Redux handle it
+    if (err.response?.status === 401) {
+      localStorage.removeItem('novacinema_token')
+      localStorage.removeItem('novacinema_user')
+      window.location.href = '/login'
+    }
     return Promise.reject(err)
   }
 )
