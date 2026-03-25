@@ -45,9 +45,11 @@ function App() {
   const { isAuthenticated } = useSelector(state => state.auth)
 
   useEffect(() => {
-    if (isAuthenticated) dispatch(fetchMe())
+    // Only fetch once on mount — not on every auth state change
+    const token = localStorage.getItem('novacinema_token')
+    if (token) dispatch(fetchMe())
     connectSocket()
-  }, [isAuthenticated])
+  }, [])
 
   return (
     <Router>
