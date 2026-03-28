@@ -100,7 +100,15 @@ export default function MovieReviews({ movieId }) {
       loadReviews(1)
       loadMyReview()
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to submit review')
+      const msg = err.response?.data?.message || err.message || 'Failed to submit review'
+      if (err.response?.status === 401) {
+        toast.error('Please login to submit a review')
+      } else if (err.response?.status === 400) {
+        toast.error(msg)
+      } else {
+        toast.error(msg)
+      }
+      console.error('Review error:', err.response?.data)
     } finally { setSubmitting(false) }
   }
 
