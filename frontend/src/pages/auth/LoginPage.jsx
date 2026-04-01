@@ -129,7 +129,7 @@ export default function LoginPage() {
                   onMouseEnter={e => e.currentTarget.style.borderColor='rgba(102,51,212,0.5)'}
                   onMouseLeave={e => e.currentTarget.style.borderColor='rgba(102,51,212,0.25)'}>
                   <div className="text-2xl mb-1">👤</div>
-                  <div className="text-white text-xs font-semibold">Demo User</div>
+                  <div className="text-white text-xs font-semibold">User</div>
                   <div className="text-white/30 text-xs mt-0.5">user@novacinema.com</div>
                 </motion.button>
 
@@ -142,7 +142,7 @@ export default function LoginPage() {
                   onMouseEnter={e => e.currentTarget.style.borderColor='rgba(255,45,107,0.5)'}
                   onMouseLeave={e => e.currentTarget.style.borderColor='rgba(255,45,107,0.25)'}>
                   <div className="text-2xl mb-1">⚡</div>
-                  <div className="text-cyan-400 text-xs font-semibold">Demo Admin</div>
+                  <div className="text-cyan-400 text-xs font-semibold">Admin</div>
                   <div className="text-white/30 text-xs mt-0.5">admin@novacinema.com</div>
                 </motion.button>
               </div>
